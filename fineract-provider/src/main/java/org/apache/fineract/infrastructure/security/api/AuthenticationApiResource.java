@@ -41,7 +41,6 @@ import org.apache.fineract.infrastructure.security.constants.TwoFactorConstants;
 import org.apache.fineract.infrastructure.security.data.AuthenticatedUserData;
 import org.apache.fineract.infrastructure.security.service.SpringSecurityPlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.service.TwoFactorUtils;
-import org.apache.fineract.portfolio.client.service.ClientReadPlatformService;
 import org.apache.fineract.useradministration.data.RoleData;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.apache.fineract.useradministration.domain.Role;
@@ -72,19 +71,16 @@ public class AuthenticationApiResource {
     private final ToApiJsonSerializer<AuthenticatedUserData> apiJsonSerializerService;
     private final SpringSecurityPlatformSecurityContext springSecurityPlatformSecurityContext;
     private final TwoFactorUtils twoFactorUtils;
-    private final ClientReadPlatformService clientReadPlatformService;
 
     @Autowired
     public AuthenticationApiResource(
             @Qualifier("customAuthenticationProvider") final DaoAuthenticationProvider customAuthenticationProvider,
             final ToApiJsonSerializer<AuthenticatedUserData> apiJsonSerializerService,
-            final SpringSecurityPlatformSecurityContext springSecurityPlatformSecurityContext, TwoFactorUtils twoFactorUtils,
-            ClientReadPlatformService aClientReadPlatformService) {
+            final SpringSecurityPlatformSecurityContext springSecurityPlatformSecurityContext, TwoFactorUtils twoFactorUtils) {
         this.customAuthenticationProvider = customAuthenticationProvider;
         this.apiJsonSerializerService = apiJsonSerializerService;
         this.springSecurityPlatformSecurityContext = springSecurityPlatformSecurityContext;
         this.twoFactorUtils = twoFactorUtils;
-        clientReadPlatformService = aClientReadPlatformService;
     }
 
     @POST
@@ -138,16 +134,14 @@ public class AuthenticationApiResource {
 
             boolean isTwoFactorRequired = twoFactorUtils.isTwoFactorAuthEnabled()
                     && !principal.hasSpecificPermissionTo(TwoFactorConstants.BYPASS_TWO_FACTOR_PERMISSION);
-            Long userId = principal.getId();
             if (this.springSecurityPlatformSecurityContext.doesPasswordHasToBeRenewed(principal)) {
-                authenticatedUserData = new AuthenticatedUserData(request.username, userId,
+                authenticatedUserData = new AuthenticatedUserData(request.username, principal.getId(),
                         new String(base64EncodedAuthenticationKey, StandardCharsets.UTF_8), isTwoFactorRequired);
             } else {
 
                 authenticatedUserData = new AuthenticatedUserData(request.username, officeId, officeName, staffId, staffDisplayName,
                         organisationalRole, roles, permissions, principal.getId(),
-                        new String(base64EncodedAuthenticationKey, StandardCharsets.UTF_8), isTwoFactorRequired,
-                        principal.isSelfServiceUser() ? clientReadPlatformService.retrieveUserClients(userId) : null);
+                        new String(base64EncodedAuthenticationKey, StandardCharsets.UTF_8), isTwoFactorRequired);
             }
 
         }

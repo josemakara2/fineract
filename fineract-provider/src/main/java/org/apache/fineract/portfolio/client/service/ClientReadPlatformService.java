@@ -44,8 +44,6 @@ public interface ClientReadPlatformService {
 
     Collection<ClientData> retrieveActiveClientMembersOfCenter(Long centerId);
 
-    Collection<Long> retrieveUserClients(Long aUserID);
-
     ClientData retrieveAllNarrations(String clientNarrations);
 
     Date retrieveClientTransferProposalDate(Long clientId);
